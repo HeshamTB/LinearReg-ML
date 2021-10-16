@@ -1,10 +1,17 @@
+import math
 import sys
 
 import numpy
 import numpy as np
 
 np.set_printoptions(threshold=sys.maxsize)
-
+_code_done = 0
+_code_diverged = 1
+_code_interrupted = 2
+_code = 0
+_loss = 1
+_theta = 2
+_iterations = 3
 
 def main():
     trainData = readCSVFile('train.csv')  # Contains price labels
@@ -14,11 +21,15 @@ def main():
     selectedColumns(testData, cols1)
     selectedColumns(trainData, cols1)
     selectedColumns(YTrain, [80])
+    fit(YTrain, cols1, testData, trainData)
+    return 0
+
+
+def fit(YTrain, cols1, testData, trainData, lr = 0.00000001):
     # for row in trainData: print(row)
     trainData = toNumpyMat(trainData)
     testData = toNumpyMat(testData)
     yTrain = toNumpyMat(YTrain)
-    lr = 0.00000001
     # for row in testData: print(row)
     # use Sum of Squared diff SSD for cost func
     # Goal is to fit line/s over the train data and get the minimum error (Cost function value) using test data.
@@ -26,26 +37,30 @@ def main():
     # Theta mat start as random. Cost func J(theta1, theta2, ...) or J(theta)
     # for gradiant  [hypo - (actual y)]
     loss = []
-    theta = np.random.rand(len(cols1)+1)
+    theta = np.random.rand(len(cols1) + 1)
     ones = np.ones(len(trainData))
-
     trainData = trainData.transpose()
     theta = theta
-    trainData = np.vstack([ones, trainData]) # Now in shape and intercept ones
-    print(trainData.shape)
-    print(theta.shape)
+    trainData = np.vstack([ones, trainData])  # Now in shape and intercept ones
     counter = 0
+    currLoss = 0
+    return_code = 0
     while True:
         try:
-            Y = hypLinear(trainData.transpose(), theta) # Hypothesis
-            dJ = (trainData*(Y-YTrain).transpose())/trainData.shape[1] # Gradiant
-            theta = theta - (lr*dJ.transpose()) # Update theta
-            currLoss = ((Y-YTrain)**2).sum()
+            Y = hypLinear(trainData.transpose(), theta)  # Hypothesis
+            dJ = (trainData * (Y - YTrain).transpose()) / trainData.shape[1]  # Gradiant
+            theta = theta - (lr * dJ.transpose())  # Update theta
+            currLoss = ((Y - YTrain) ** 2).sum()
+            if currLoss == math.inf:
+                print('\nDiverged with lr=%f' % lr)
+                return_code = _code_diverged
+                break # Diverged
             counter += 1
-            if counter % 100 == 0: print('i: %d, loss = %d, theta: %s' % (counter, currLoss, theta[0]))
-        except KeyboardInterrupt: break
-    return 0
-
+            if counter % 100 == 0: print('i: %d, loss = %f, theta: %s' % (counter, currLoss, theta[0]))
+        except KeyboardInterrupt:
+            return_code = _code_interrupted
+            break
+    return return_code, currLoss, theta[0], counter
 
 def hypLinear(XTrain, theta) -> numpy.ndarray:
     return theta * XTrain
