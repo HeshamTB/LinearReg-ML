@@ -1,6 +1,6 @@
 import math
 import sys
-from threading import Thread
+import random
 import numpy
 import numpy as np
 
@@ -21,21 +21,35 @@ def main():
     selectedColumns(testData, cols1)
     selectedColumns(trainData, cols1)
     selectedColumns(YTrain, [80])
+    testData = toNumpyMat(testData)
+    ones = np.ones(len(testData))
+    testData = testData.transpose()
+    testData = np.vstack([ones, testData])  # Now in shape and intercept ones
+
     #fit(YTrain, cols1, testData, trainData)
-    thread_1 = Thread(target=fit,name='Thread-1', args=(YTrain, cols1, testData, trainData))
-    thread_2 = Thread(target=fit,name='Thread-2', args=(YTrain, cols1, testData, trainData))
-    thread_1.start()
-    thread_2.start()
-    thread_2.join()
-    thread_1.join()
+    from multiprocessing.pool import Pool
+    pool = Pool()
+    threads = list()
+    for i in range(int(sys.argv[1])):
+        t = pool.apply_async(func=fit, args=(YTrain, cols1, trainData, 400000))
+        threads.append(t)
+    for t in threads:
+        result = t.get(timeout=172800)
+        print("testing",  result)
+        # To test, apply to hypothesis func
+        print(testData.shape)
+        print(result[_theta].shape)
+        testData = np.array(testData)
+        est = hypLinear(testData.transpose(), result[_theta])
+        for i, val in enumerate(est): print('i:%d $=%f' % (i, val.sum(0)));
 
     return 0
 
 
-def fit(YTrain, cols1, testData, trainData, lr = 0.00000001, i=300000):
+def fit(YTrain, cols1, trainData, i=300000, lr = 0.00000001):
     # for row in trainData: print(row)
     trainData = toNumpyMat(trainData)
-    testData = toNumpyMat(testData)
+    #testData = toNumpyMat(testData)
     yTrain = toNumpyMat(YTrain)
     # for row in testData: print(row)
     # use Sum of Squared diff SSD for cost func
@@ -45,6 +59,7 @@ def fit(YTrain, cols1, testData, trainData, lr = 0.00000001, i=300000):
     # for gradiant  [hypo - (actual y)]
     loss = []
     theta = np.random.rand(len(cols1) + 1)
+    theta = theta*random.random()*100
     ones = np.ones(len(trainData))
     trainData = trainData.transpose()
     theta = theta
@@ -63,11 +78,12 @@ def fit(YTrain, cols1, testData, trainData, lr = 0.00000001, i=300000):
                 return_code = _code_diverged
                 break # Diverged
             counter += 1
-            if counter % 100 == 0: print('i: %d, loss = %f, theta: %s' % (counter, currLoss, theta[0]))
+            #if counter % 100 == 0: print('i: %d, loss = %f, theta: %s' % (counter, currLoss, theta[0]))
         except KeyboardInterrupt:
             return_code = _code_interrupted
             break
     return return_code, currLoss, theta[0], counter
+
 
 def hypLinear(XTrain, theta) -> numpy.ndarray:
     return theta * XTrain
