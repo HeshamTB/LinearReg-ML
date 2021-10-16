@@ -42,9 +42,8 @@ def main():
             theta = theta - (lr*dJ.transpose()) # Update theta
             currLoss = ((Y-YTrain)**2).sum()
             counter += 1
-            if counter % 100 == 0: print('i: %d, loss = %d' % (counter,currLoss))
+            if counter % 100 == 0: print('i: %d, loss = %d, theta: %s' % (counter, currLoss, theta[0]))
         except KeyboardInterrupt: break
-        except RuntimeWarning: break
     return 0
 
 
