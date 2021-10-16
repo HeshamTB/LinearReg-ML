@@ -18,7 +18,7 @@ def main():
     trainData = toNumpyMat(trainData)
     testData = toNumpyMat(testData)
     yTrain = toNumpyMat(YTrain)
-    lr = 0.0001
+    lr = 0.00000001
     # for row in testData: print(row)
     # use Sum of Squared diff SSD for cost func
     # Goal is to fit line/s over the train data and get the minimum error (Cost function value) using test data.
@@ -30,12 +30,21 @@ def main():
     ones = np.ones(len(trainData))
 
     trainData = trainData.transpose()
+    theta = theta
     trainData = np.vstack([ones, trainData]) # Now in shape and intercept ones
-    Y = hypLinear(trainData.transpose(), theta.transpose()) # Hypothesis
-    dJ = (trainData*(Y-YTrain).transpose())/trainData.shape[1] # Gradiant
-    theta = theta - (lr*dJ.transpose()) # Update theta
-    currLoss = ((Y-YTrain)**2).sum()
-    print(currLoss)
+    print(trainData.shape)
+    print(theta.shape)
+    counter = 0
+    while True:
+        try:
+            Y = hypLinear(trainData.transpose(), theta) # Hypothesis
+            dJ = (trainData*(Y-YTrain).transpose())/trainData.shape[1] # Gradiant
+            theta = theta - (lr*dJ.transpose()) # Update theta
+            currLoss = ((Y-YTrain)**2).sum()
+            counter += 1
+            if counter % 100 == 0: print('i: %d, loss = %d' % (counter,currLoss))
+        except KeyboardInterrupt: break
+        except RuntimeWarning: break
     return 0
 
 
