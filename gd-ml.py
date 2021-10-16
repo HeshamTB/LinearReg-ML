@@ -8,16 +8,16 @@ np.set_printoptions(threshold=sys.maxsize)
 
 def main():
     trainData = readCSVFile('train.csv')  # Contains price labels
-    yTrain = readCSVFile('train.csv')
+    YTrain = readCSVFile('train.csv')
     testData = readCSVFile('test.csv')
     cols1 = [1, 4, 17, 18, 19, 43, 44, 46, 62, 77]  # Features selected
     selectedColumns(testData, cols1)
     selectedColumns(trainData, cols1)
-    selectedColumns(yTrain, [80])
+    selectedColumns(YTrain, [80])
     # for row in trainData: print(row)
     trainData = toNumpyMat(trainData)
     testData = toNumpyMat(testData)
-    yTrain = toNumpyMat(yTrain)
+    yTrain = toNumpyMat(YTrain)
     lr = 0.0001
     # for row in testData: print(row)
     # use Sum of Squared diff SSD for cost func
@@ -25,21 +25,17 @@ def main():
     # We try to automate this process by changing lr and selecting the best fit.
     # Theta mat start as random. Cost func J(theta1, theta2, ...) or J(theta)
     # for gradiant  [hypo - (actual y)]
+    loss = []
+    theta = np.random.rand(len(cols1)+1)
+    ones = np.ones(len(trainData))
 
-    theta = np.random.rand(len(cols1))
-#    print(trainData)
-#    print(theta)
-    # trainData.transpose()
-    # print(trainData)
-    # np.vstack([np.ones((1,len(trainData))), trainData])
-    Y = hypLinear(trainData, theta.transpose())
-#    print(Y)
-    # for example in trainData:
-    #     example = np.matrix(example).transpose()
-    #     example = np.vstack([np.ones(1), example])
-    #     # print(example)
-    #     Y = hypLinear(np.matrix(theta), example)
-    #     # print(Y)
+    trainData = trainData.transpose()
+    trainData = np.vstack([ones, trainData]) # Now in shape and intercept ones
+    Y = hypLinear(trainData.transpose(), theta.transpose()) # Hypothesis
+    dJ = (trainData*(Y-YTrain).transpose())/trainData.shape[1] # Gradiant
+    theta = theta - (lr*dJ.transpose()) # Update theta
+    currLoss = ((Y-YTrain)**2).sum()
+    print(currLoss)
     return 0
 
 
