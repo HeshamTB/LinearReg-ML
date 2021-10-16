@@ -1,6 +1,6 @@
 import math
 import sys
-
+from threading import Thread
 import numpy
 import numpy as np
 
@@ -21,11 +21,18 @@ def main():
     selectedColumns(testData, cols1)
     selectedColumns(trainData, cols1)
     selectedColumns(YTrain, [80])
-    fit(YTrain, cols1, testData, trainData)
+    #fit(YTrain, cols1, testData, trainData)
+    thread_1 = Thread(target=fit,name='Thread-1', args=(YTrain, cols1, testData, trainData))
+    thread_2 = Thread(target=fit,name='Thread-2', args=(YTrain, cols1, testData, trainData))
+    thread_1.start()
+    thread_2.start()
+    thread_2.join()
+    thread_1.join()
+
     return 0
 
 
-def fit(YTrain, cols1, testData, trainData, lr = 0.00000001):
+def fit(YTrain, cols1, testData, trainData, lr = 0.00000001, i=300000):
     # for row in trainData: print(row)
     trainData = toNumpyMat(trainData)
     testData = toNumpyMat(testData)
@@ -44,8 +51,8 @@ def fit(YTrain, cols1, testData, trainData, lr = 0.00000001):
     trainData = np.vstack([ones, trainData])  # Now in shape and intercept ones
     counter = 0
     currLoss = 0
-    return_code = 0
-    while True:
+    return_code = _code_done
+    while counter < i:
         try:
             Y = hypLinear(trainData.transpose(), theta)  # Hypothesis
             dJ = (trainData * (Y - YTrain).transpose()) / trainData.shape[1]  # Gradiant
