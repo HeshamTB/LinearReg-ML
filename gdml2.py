@@ -3,7 +3,8 @@ import sys
 import numpy as np
 import csv
 
-#np.set_printoptions(threshold=sys.maxsize)
+
+np.set_printoptions(threshold=sys.maxsize)
 
 
 def main():
@@ -16,20 +17,37 @@ def main():
     trainX = trainX.transpose()
     ones = np.ones(trainX.shape[1])
     trainX = np.vstack([ones, trainX])  # Now in shape and intercept ones
-    #print('trainX ', trainX.shape)
+    # print('trainX ', trainX.shape)
     trainY = readCSVFile('train.csv')
     selectedColumns(trainY, [80])
     trainY = np.matrix(trainY)
     trainY = trainY.transpose()
-    #print('trainY ', trainY.shape)
+    # print('trainY ', trainY.shape)
     theta = np.random.random(trainX.shape[0])
     theta = np.matrix(theta)
-    #print('theta ', theta.shape)
-    fit(lr, theta, trainX, trainY)
+    # print('theta ', theta.shape)
+    loss, theta = fit(lr, theta, trainX, trainY, False, 6000)
+    #print(loss)
+    testX = readCSVFile('test.csv')
+    #printFeatureIndcies(testX)
+    selectedColumns(testX, cols1)
+    testX = np.matrix(testX)
+    testX = testX.transpose()
+    ones = np.ones(testX.shape[1])
+    testX = np.vstack([ones, testX])  # Now in shape and intercept ones
 
+    testY = readCSVFile('test.csv')
+    selectedColumns(testY, [80])
+    testY = np.matrix(testY)
+    testY = testY.transpose()
+    Y_infer = hypo(testX, theta)
+    loss_test = ((Y_infer - testY).sum() ** 2) / testX.shape[1]
+    print(loss_test, theta)
 
-def fit(lr, theta, trainX, trainY, iterations=500000):
+def fit(lr, theta, trainX, trainY, verbose, iterations=500000):
     count = 0
+    min = math.inf
+    # data = list()
     while count < iterations:
         Y = hypo(trainX, theta)
         # print(Y)
@@ -39,13 +57,16 @@ def fit(lr, theta, trainX, trainY, iterations=500000):
         # print('dJ ', dJ.shape)
         theta = theta - lr * dJ.transpose()
         loss = ((Y - trainY).sum() ** 2) / trainX.shape[1]
+        # if loss < min: min = loss; data.append([count, loss, theta])
         count += 1
         if loss == math.nan or loss == math.inf: break  # Diverged
-        if count % 100 == 0: print('i=%d, loss=%d' % (count, loss))
+        if count % 100 == 0 and verbose: print('i=%d, loss=%d, theta=%s' % (count, loss, theta))
+    # return data
+    return loss, theta
 
 
 def hypo(x, theta):
-    return theta*x
+    return theta * x
 
 
 def readCSVFile(filename: str) -> list:
@@ -55,10 +76,11 @@ def readCSVFile(filename: str) -> list:
         csvReader = csv.reader(csvFile)
         for i, row in enumerate(csvReader):
             if i == 0:
-                continue ## pass first row (feat names)
+                data.append(row)  ## pass first row (feat names)
             else:
                 data.append(row)
     return data
+
 
 def selectedColumns(data: list, columns: list):
     # Remove data not included in study
@@ -70,15 +92,17 @@ def selectedColumns(data: list, columns: list):
         for featureIndex in range(len(data[rowIndex])):
             if featureIndex in columns:
                 try:
-                    newRow.append(int(data[rowIndex][featureIndex]))
+                    newRow.append(float(data[rowIndex][featureIndex]))
                 except ValueError:
                     newRow.append(0.0)
         # Replace new row
         data[rowIndex] = newRow
 
+
 def printFeatureIndcies(data):
     for i, val in enumerate(data[0]):
         print((i, val))
+
 
 if __name__ == '__main__':
     exit(main())
