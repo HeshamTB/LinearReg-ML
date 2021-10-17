@@ -17,6 +17,7 @@ def main():
         trainX = trainX_full
         lr = float(sys.argv[2])
         selectedColumns(trainX, cols1)
+        trainX = featurescaling(trainX)
         trainX = np.matrix(trainX)
         trainX = trainX.transpose()
         ones = np.ones(trainX.shape[1])
@@ -24,11 +25,12 @@ def main():
         # print('trainX ', trainX.shape)
         trainY = readCSVFile('train.csv')
         selectedColumns(trainY, [80])
+        trainY = featurescaling(trainY)
         trainY = np.matrix(trainY)
         trainY = trainY.transpose()
         # print('trainY ', trainY.shape)
         theta = np.random.random(trainX.shape[0])
-        theta = np.matrix(theta)
+        theta = np.matrix(theta)*10
         # print('theta ', theta.shape)
         loss, theta = fit(lr, theta, trainX, trainY, True, int(sys.argv[3]))
         #print(loss, theta)
@@ -62,13 +64,13 @@ def fit(lr, theta, trainX, trainY, verbose, iterations=500000):
         # print('Y ', Y.shape)
         # print(trainX.shape[1])
         dJ = (trainX * (Y - trainY).transpose()) / trainX.shape[1]
-        # print('dJ ', dJ.shape)
+        #print('dJ ', dJ.shape)
         theta = theta - lr * dJ.transpose()
         loss = ((Y - trainY).sum() ** 2) / trainX.shape[1]
         # if loss < min: min = loss; data.append([count, loss, theta])
         count += 1
         if loss == math.nan or loss == math.inf: break  # Diverged
-        if count % 100 == 0 and verbose: print('i=%d, loss=%d, theta=%s' % (count, loss, theta))
+        if count % 100 == 0 and verbose: print('i=%d, loss=%f, theta=%s' % (count, loss, theta))
     # return data
     return loss, theta
 
@@ -76,6 +78,26 @@ def fit(lr, theta, trainX, trainY, verbose, iterations=500000):
 def hypo(x, theta):
     return theta * x
 
+def featurescaling(array):
+    #  feature scaling
+    biggest_value=0
+    counter_list=0
+    counter_element=0
+    for mnm in range(len(array[0])):
+        for me in array:
+            if (int (array[counter_list][counter_element]))>biggest_value:
+                biggest_value=(int (array[counter_list][counter_element]))
+            counter_list=counter_list+1
+        counter_list=0
+
+        for mee in array:
+            array[counter_list][counter_element]=  ((int (array[counter_list][counter_element]))/biggest_value)
+            counter_list=counter_list+1
+
+        counter_list=0
+        biggest_value=0
+        counter_element=counter_element+1
+    return array
 
 def readCSVFile(filename: str) -> list:
     import csv
