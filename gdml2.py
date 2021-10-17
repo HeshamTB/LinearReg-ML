@@ -16,8 +16,8 @@ def main():
         trainX = trainX_full
         lr = float(sys.argv[2])
         selectedColumns(trainX, cols1)
-        trainX = raiseOrder(trainX, 2)
-        trainX = featurescaling(trainX)
+        trainX = raiseOrder(trainX, 3)
+        #trainX = featurescaling(trainX)
         trainX = np.matrix(trainX)
         trainX = trainX.transpose()
         ones = np.ones(trainX.shape[1])
@@ -25,7 +25,7 @@ def main():
         # print('trainX ', trainX.shape)
         trainY = readCSVFile('train.csv')
         selectedColumns(trainY, [80])
-        trainY = featurescaling(trainY)
+        #trainY = featurescaling(trainY)
         trainY = np.matrix(trainY)
         trainY = trainY.transpose()
         # print('trainY ', trainY.shape)
@@ -34,10 +34,11 @@ def main():
         # print('theta ', theta.shape)
         loss, theta = fit(lr, theta, trainX, trainY, True, int(sys.argv[3]))
         # print(loss, theta)
-    elif sys.argv[1] == 'test':
+        # Test
         testX = readCSVFile('test.csv')
         # printFeatureIndcies(testX)
         selectedColumns(testX, cols1)
+        testX = raiseOrder(testX, 3)
         testX = np.matrix(testX)
         testX = testX.transpose()
         ones = np.ones(testX.shape[1])
@@ -46,16 +47,17 @@ def main():
         selectedColumns(testY, [80])
         testY = np.matrix(testY)
         testY = testY.transpose()
-        theta = list()
-        for i in range(2, 13): theta.append(float(sys.argv[i]))
-        loss_test = test(testX, testY, theta)
-        print(loss_test, theta)
+        # theta = list()
+        # for i in range(2, 13): theta.append(float(sys.argv[i]))
+        loss_test, Y_infer = test(testX, testY, theta)
+        print(Y_infer)
+        print('\n\n', loss_test, theta)
 
 
 def test(testX, testY, theta):
     Y_infer = hypo(testX, theta)
     loss_test = ((Y_infer - testY).sum() ** 2) / testX.shape[1]
-    return loss_test
+    return loss_test, Y_infer
 
 
 def fit(lr, theta, trainX, trainY, verbose, iterations=500000):
