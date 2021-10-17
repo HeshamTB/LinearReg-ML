@@ -31,7 +31,7 @@ def main():
     pool = Pool()
     threads = list()
     for i in range(int(sys.argv[1])):
-        t = pool.apply_async(func=fit, args=(YTrain, cols1, trainData, 400000))
+        t = pool.apply_async(func=fit, args=(YTrain, cols1, trainData, 5000000))
         threads.append(t)
     for t in threads:
         result = t.get(timeout=172800)
@@ -59,7 +59,7 @@ def fit(YTrain, cols1, trainData, i=300000, lr = 0.00000001):
     # for gradiant  [hypo - (actual y)]
     loss = []
     theta = np.random.rand(len(cols1) + 1)
-    theta = theta*random.random()*100
+    theta = theta*random.random()
     ones = np.ones(len(trainData))
     trainData = trainData.transpose()
     theta = theta
@@ -78,7 +78,7 @@ def fit(YTrain, cols1, trainData, i=300000, lr = 0.00000001):
                 return_code = _code_diverged
                 break # Diverged
             counter += 1
-            #if counter % 100 == 0: print('i: %d, loss = %f, theta: %s' % (counter, currLoss, theta[0]))
+            if counter % 100 == 0: print('i: %d, loss = %f, theta: %s' % (counter, currLoss, theta[0]))
         except KeyboardInterrupt:
             return_code = _code_interrupted
             break
