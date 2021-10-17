@@ -8,41 +8,49 @@ np.set_printoptions(threshold=sys.maxsize)
 
 
 def main():
-    trainX_full = readCSVFile('train.csv')
-    trainX = trainX_full
+    print('use:\n'
+          'learn \'0.0001\' 500000\n'
+          'test <theta>\n')
     cols1 = [1, 4, 17, 18, 19, 43, 44, 46, 62, 77]  # Features selected
-    lr = 0.0000000001
-    selectedColumns(trainX, cols1)
-    trainX = np.matrix(trainX)
-    trainX = trainX.transpose()
-    ones = np.ones(trainX.shape[1])
-    trainX = np.vstack([ones, trainX])  # Now in shape and intercept ones
-    # print('trainX ', trainX.shape)
-    trainY = readCSVFile('train.csv')
-    selectedColumns(trainY, [80])
-    trainY = np.matrix(trainY)
-    trainY = trainY.transpose()
-    # print('trainY ', trainY.shape)
-    theta = np.random.random(trainX.shape[0])
-    theta = np.matrix(theta)
-    # print('theta ', theta.shape)
-    loss, theta = fit(lr, theta, trainX, trainY, False, 6000)
-    #print(loss)
-    testX = readCSVFile('test.csv')
-    #printFeatureIndcies(testX)
-    selectedColumns(testX, cols1)
-    testX = np.matrix(testX)
-    testX = testX.transpose()
-    ones = np.ones(testX.shape[1])
-    testX = np.vstack([ones, testX])  # Now in shape and intercept ones
+    if sys.argv[1] == 'learn':
+        trainX_full = readCSVFile('train.csv')
+        trainX = trainX_full
+        lr = float(sys.argv[2])
+        selectedColumns(trainX, cols1)
+        trainX = np.matrix(trainX)
+        trainX = trainX.transpose()
+        ones = np.ones(trainX.shape[1])
+        trainX = np.vstack([ones, trainX])  # Now in shape and intercept ones
+        # print('trainX ', trainX.shape)
+        trainY = readCSVFile('train.csv')
+        selectedColumns(trainY, [80])
+        trainY = np.matrix(trainY)
+        trainY = trainY.transpose()
+        # print('trainY ', trainY.shape)
+        theta = np.random.random(trainX.shape[0])
+        theta = np.matrix(theta)
+        # print('theta ', theta.shape)
+        loss, theta = fit(lr, theta, trainX, trainY, True, int(sys.argv[3]))
+        #print(loss, theta)
+    elif sys.argv[1] == 'test':
+        testX = readCSVFile('test.csv')
+        #printFeatureIndcies(testX)
+        selectedColumns(testX, cols1)
+        testX = np.matrix(testX)
+        testX = testX.transpose()
+        ones = np.ones(testX.shape[1])
+        testX = np.vstack([ones, testX])  # Now in shape and intercept ones
 
-    testY = readCSVFile('test.csv')
-    selectedColumns(testY, [80])
-    testY = np.matrix(testY)
-    testY = testY.transpose()
-    Y_infer = hypo(testX, theta)
-    loss_test = ((Y_infer - testY).sum() ** 2) / testX.shape[1]
-    print(loss_test, theta)
+        testY = readCSVFile('test.csv')
+        selectedColumns(testY, [80])
+        testY = np.matrix(testY)
+        testY = testY.transpose()
+        theta = list()
+        for i in range(2,13): theta.append(float(sys.argv[i]))
+        Y_infer = hypo(testX, theta)
+        loss_test = ((Y_infer - testY).sum() ** 2) / testX.shape[1]
+        print(loss_test, theta)
+
 
 def fit(lr, theta, trainX, trainY, verbose, iterations=500000):
     count = 0
