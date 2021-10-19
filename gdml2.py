@@ -1,22 +1,19 @@
 import math
 import sys
+
 import numpy as np
-import csv
 
 np.set_printoptions(threshold=sys.maxsize)
-
+order = 1
 
 def main():
-    print('use:\n'
-          'learn \'0.0001\' 500000\n'
-          'test <theta>\n')
     cols1 = [1, 4, 17, 18, 19, 43, 44, 46, 62, 77]  # Features selected
     if sys.argv[1] == 'learn':
         trainX_full = readCSVFile('train.csv')
         trainX = trainX_full
         lr = float(sys.argv[2])
         selectedColumns(trainX, cols1)
-        trainX = raiseOrder(trainX, 1)
+        trainX = raiseOrder(trainX, order)
         trainX = featurescaling(trainX)
         trainX = np.matrix(trainX)
         trainX = trainX.transpose()
@@ -25,12 +22,12 @@ def main():
         # print('trainX ', trainX.shape)
         trainY = readCSVFile('train.csv')
         selectedColumns(trainY, [80])
-        trainY = featurescaling(trainY)
+        #trainY = featurescaling(trainY)
         trainY = np.matrix(trainY)
         trainY = trainY.transpose()
         # print('trainY ', trainY.shape)
         theta = np.random.random(trainX.shape[0])
-        theta = np.matrix(theta) * 10
+        theta = np.matrix(theta)
         # print('theta ', theta.shape)
         loss, theta = fit(lr, theta, trainX, trainY, True, int(sys.argv[3]))
         # print(loss, theta)
@@ -38,7 +35,8 @@ def main():
         testX = readCSVFile('test.csv')
         # printFeatureIndcies(testX)
         selectedColumns(testX, cols1)
-        testX = raiseOrder(testX, 1)
+        testX = raiseOrder(testX, order)
+        testX = featurescaling(testX)
         testX = np.matrix(testX)
         testX = testX.transpose()
         ones = np.ones(testX.shape[1])
@@ -47,12 +45,13 @@ def main():
         selectedColumns(testY, [80])
         testY = np.matrix(testY)
         testY = testY.transpose()
-        # theta = list()
-        # for i in range(2, 13): theta.append(float(sys.argv[i]))
         loss_test, Y_infer = test(testX, testY, theta)
         print(Y_infer)
         print('\n\n', loss_test, theta)
 
+    elif sys.argv[1] == 'test':
+        theta = sys.argv[2].split()
+        print(theta)
 
 def test(testX, testY, theta):
     Y_infer = hypo(testX, theta)
@@ -64,21 +63,20 @@ def fit(lr, theta, trainX, trainY, verbose, iterations=500000):
     count = 0
     min = math.inf
     loss = 0
-    # data = list()
     while count < iterations:
+        Y = hypo(trainX, theta)
+        dJ = (trainX * (Y - trainY).transpose()) / trainX.shape[1]
+        theta = theta - lr * dJ.transpose()
+        loss = ((Y - trainY).sum() ** 2) / trainX.shape[1]
+        last = loss
         try:
             Y = hypo(trainX, theta)
-            # print(Y)
-            # print('Y ', Y.shape)
-            # print(trainX.shape[1])
             dJ = (trainX * (Y - trainY).transpose()) / trainX.shape[1]
-            # print('dJ ', dJ.shape)
             theta = theta - lr * dJ.transpose()
             loss = ((Y - trainY).sum() ** 2) / trainX.shape[1]
-            # if loss < min: min = loss; data.append([count, loss, theta])
             count += 1
             if loss == math.nan or loss == math.inf: break  # Diverged
-            if count % 100 == 0 and verbose: print('i=%d, loss=%f, theta=%s' % (count, loss, theta))
+            if count % 1 == 0 and verbose: print('i=%d, loss=%f, theta=%s' % (count, loss, theta))
         except KeyboardInterrupt:
             break
     # return data
@@ -95,7 +93,7 @@ def raiseOrder(data: list[list], order: int):
         data_new.append(new_row)
     return data_new
 
-def hypo(x, theta):
+def hypo(x : np.matrix, theta : np.matrix) -> np.matrix:
     return theta * x
 
 
